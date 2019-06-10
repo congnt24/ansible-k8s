@@ -1,0 +1,46 @@
+---
+- name: reset kubeadm
+  hosts: all
+  become: yes
+  tasks:
+    - name: reset kubeadm
+      command: kubeadm reset -f
+- name: remove cluster_init.txt in master
+  hosts: master
+  become: yes
+  become_user: ubuntu
+  tasks: 
+    - name: remove file
+      command: "{{ item }}"
+      with_items:
+        - rm -f cluster_init.txt
+        - rm -rf .kube
+      args: 
+        chdir: $HOME
+        removes: cluster_init.txt
+
+- name: remove ingress-helm.txt in master
+  hosts: master
+  become: yes
+  become_user: ubuntu
+  tasks: 
+    - name: remove file
+      command: "{{ item }}"
+      with_items:
+        - rm -f ingress-helm.txt
+        - rm -rf .kube
+        - rm -f calico.yaml
+      args: 
+        chdir: $HOME
+        removes: ingress-helm.txt
+
+- name: remove node_joined.txt in node
+  hosts: node
+  become: yes
+  become_user: ubuntu
+  tasks: 
+    - name: remove file
+      command: rm -f node_joined.txt
+      args: 
+        chdir: $HOME
+        removes: node_joined.txt

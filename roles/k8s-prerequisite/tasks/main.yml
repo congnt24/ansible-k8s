@@ -1,0 +1,60 @@
+---
+# tasks file for k8s-prerequisite
+- name: Remove swap from fstab
+  lineinfile:
+    destfile: /etc/fstab
+    regexp: 'swap'
+    state: absent
+  become: yes
+  register: swap
+- name: Disable swap
+  command: swapoff --all
+  when: swap is changed
+  become: yes
+- name: Add APT_KEY
+  apt_key:
+    url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+    state: present
+  become: yes
+
+- name: Add APT_REPO
+  apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+  become: yes
+
+- name: Install openssh-server and docker.io
+  apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - openssh-server
+      - docker.io
+  become: yes
+
+- name: Install Kubenetes
+  apt:
+    name: "{{ packages }}"
+    state: present
+  become: yes
+  vars:
+    packages:
+      - kubelet
+      - kubeadm
+      - kubectl
+      - kubernetes-cni
+
+      #- name: add apt
+      #  apt_repository:
+        #    repo: ppa:projectatomic/ppa
+        #    state: present
+        #  become: yes
+
+
+        #- name: cri-o 
+        #  apt:
+          #    name: cri-o-1.11
+          #    state: present
+          #  become: yes
+

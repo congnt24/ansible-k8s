@@ -1,0 +1,76 @@
+---
+# tasks file for k8s-master
+- name: Set hostname to master-node
+  hostname:
+    name: master-node
+  become: yes
+
+  #- name: get ip
+  #lineinfile:
+    #  dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    # state: present
+    # line: 'Environment="cgroup-driver=systemd/cgroup-driver=cgroupfs"'
+    #become: yes
+
+- name: Initialize kube master
+  shell: kubeadm init --apiserver-advertise-address={{ ansible_default_ipv4.address}}  --pod-network-cidr={{ POD_CIDR }} >> cluster_init.txt
+  become: yes
+  #become_user: ubuntu
+  args:
+    chdir: /home/ubuntu
+    creates: cluster_init.txt
+
+- name: create folder .kube in $HOME
+  become: yes
+  become_user: ubuntu
+  file:
+    path: $HOME/.kube
+    state: directory
+    mode: 0755
+
+- name: copy file
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ubuntu/.kube/config
+    remote_src: yes
+    owner: ubuntu
+  become: yes
+
+
+- name: get calico
+  get_url:
+    url: https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+    dest: $HOME
+    mode: 0755
+  become_user: ubuntu
+
+- name: replace calico.yaml
+  become_user: ubuntu
+  replace:
+    path: $HOME/calico.yaml
+    regexp: '192.168.0.0\/16'
+    replace: "{{POD_CIDR}}"
+
+- name: apply calico
+  command: "{{ item }}"
+  become_user: ubuntu
+  with_items:
+    # - kubectl apply -f https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/etcd.yaml
+    - kubectl apply -f calico.yaml
+  args:
+    chdir: $HOME
+
+# - name: create service account for tiller
+#   command: "{{ item }}"
+#   become: yes
+#   with_items:
+#     - kubectl --namespace kube-system create serviceaccount tiller
+#     - kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+#     - kubectl --namespace kube-system patch deploy tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}' 
+
+# - name: Install kubenetes dashboard
+#   command: $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
+
+
+  
+

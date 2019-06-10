@@ -1,0 +1,21 @@
+---
+
+- name: Setting up ingress-nginx and helm
+  hosts: master
+  become: yes
+  become_user: ubuntu
+  tasks:
+    - name: create service account and bind some roles then craete ingress nginx
+      command: "{{item}}"
+      with_items:
+        - kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
+        - kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml
+        - kubectl --namespace kube-system create serviceaccount tiller
+        - kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+        - touch ingress-helm.txt
+      args:
+        chdir: $HOME
+        creates: ingress-helm.txt
+
+
+

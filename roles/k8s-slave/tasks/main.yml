@@ -1,0 +1,14 @@
+---
+# tasks file for k8s-slave
+- name: set host name to slave-node
+  hostname:
+    name: slave-node
+  become: yes
+
+- name: join cluster
+  become: yes
+  become_user: ubuntu
+  shell: "{{ hostvars['master'].join_command }} >> node_joined.txt"
+  args:
+    chdir: $HOME
+    creates: node_joined.txt

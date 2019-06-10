@@ -1,0 +1,6 @@
+---
+- name: initialize user and somethings
+  hosts: master
+  become: yes
+  roles:
+    - create-user

@@ -1,0 +1,12 @@
+[all:vars]
+ansible_user=osboxes
+ansible_pass=osboxes.org
+ansible_become_pass=osboxes.org
+
+[master:vars]
+POD_CIDR=172.16.0.0/16
+[master]
+10.10.90.165
+
+[node]
+10.10.90.166
